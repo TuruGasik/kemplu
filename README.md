@@ -49,7 +49,7 @@ Analytics endpoints and screens focus on weekly load, seasonal averages, intensi
 
 ### Sync Automation
 
-After a new HUAWEI login, Kemplu triggers an initial 365-day sync. A scheduler then refreshes all users every 6 hours with the latest 7 days of data. Manual sync is also exposed through the API.
+After a new HUAWEI login, Kemplu triggers an initial 30-day sync. A scheduler then refreshes all users every 6 hours with the latest 7 days of data. Manual sync is also exposed through the API.
 
 ## HUAWEI Health Connection and Demo Mode
 

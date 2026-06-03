@@ -17,7 +17,8 @@ router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
 @router.get("/summary", response_model=DashboardSummary)
 async def dashboard_summary(
-    days: int = Query(default=7, pattern="^(7|30|365)$"),
+    # Use 7 for a short weekly view or 365 for long-range history.
+    days: int = Query(default=30, pattern="^(7|30|365)$"),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> DashboardSummary:

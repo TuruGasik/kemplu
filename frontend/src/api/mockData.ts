@@ -102,7 +102,8 @@ export const mockApi = {
     },
   },
   dashboard: {
-    async summary(days: 7 | 30 | 365 = 7): Promise<DashboardSummary> {
+    // Use 7 for a short weekly view or 365 for long-range history.
+    async summary(days: 7 | 30 | 365 = 30): Promise<DashboardSummary> {
       const visibleSummaries = dailySummaries.slice(0, days === 365 ? 30 : days);
       return {
         days,

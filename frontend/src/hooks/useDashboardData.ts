@@ -7,7 +7,8 @@ interface DashboardDataState {
   readiness: ReadinessSummary;
 }
 
-export function useDashboardData(days: 7 | 30 | 365 = 7) {
+// Use 7 for a short weekly view or 365 for long-range history.
+export function useDashboardData(days: 7 | 30 | 365 = 30) {
   const [data, setData] = useState<DashboardDataState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -119,7 +119,8 @@ export const apiClient = {
     },
   },
   dashboard: {
-    summary(days: 7 | 30 | 365 = 7): Promise<DashboardSummary> {
+    // Use 7 for a short weekly view or 365 for long-range history.
+    summary(days: 7 | 30 | 365 = 30): Promise<DashboardSummary> {
       if (shouldUseMocks()) return mockApi.dashboard.summary(days);
       return request<DashboardSummary>(`/api/dashboard/summary${queryString({ days })}`);
     },
