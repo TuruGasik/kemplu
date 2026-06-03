@@ -1,0 +1,93 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: kemplu_backend
+    environment:
+      HUAWEI_CLIENT_ID: ${HUAWEI_CLIENT_ID:?Set HUAWEI_CLIENT_ID in .env}
+      HUAWEI_CLIENT_SECRET: ${HUAWEI_CLIENT_SECRET:?Set HUAWEI_CLIENT_SECRET in .env}
+      HUAWEI_REDIRECT_URI: ${HUAWEI_REDIRECT_URI:?Set HUAWEI_REDIRECT_URI in .env}
+      HUAWEI_AUTH_URL: ${HUAWEI_AUTH_URL:-https://oauth-login.cloud.huawei.com/oauth2/v3/authorize}
+      HUAWEI_TOKEN_URL: ${HUAWEI_TOKEN_URL:-https://oauth-login.cloud.huawei.com/oauth2/v3/token}
+      HUAWEI_HEALTH_BASE_URL: ${HUAWEI_HEALTH_BASE_URL:-https://health-api.cloud.huawei.com/healthkit/v2}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-kemplu}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-kemplu}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+      APP_VERSION: ${APP_VERSION:-1.0.0}
+      FRONTEND_URL: ${FRONTEND_URL:?Set FRONTEND_URL in .env}
+      TIMEZONE: ${TIMEZONE:-Asia/Jakarta}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
+    expose:
+      - "8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - kemplu_net
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: kemplu_frontend
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+      VITE_USE_MOCKS: ${VITE_USE_MOCKS:-false}
+      VITE_ENABLE_DEMO_MODE: ${VITE_ENABLE_DEMO_MODE:-true}
+    expose:
+      - "5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - kemplu_net
+    command: npm run dev -- --host 0.0.0.0
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: kemplu_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kemplu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-kemplu}
+    expose:
+      - "5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - kemplu_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: kemplu_redis
+    command: redis-server --appendonly yes
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - kemplu_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  kemplu_net:
+    driver: bridge
